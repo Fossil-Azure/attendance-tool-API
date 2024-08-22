@@ -413,6 +413,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         String prevShift = approvalList.getPrevShift();
         String prevAttendance = approvalList.getPrevAttendance();
         String newShift = approvalList.getNewShift();
+        String newAttendance = approvalList.getNewAttendance();
         Attendance attendance = attendanceRepository.findById(idAttendance).orElse(new Attendance());
 
         Map<String, Integer> shiftAllowanceMap = Map.of(
@@ -450,21 +451,27 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         }
 
         if (newShift != null && !newShift.isEmpty()) {
-            int newAllowance;
+            int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
             int newFoodAllowance;
-            newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
-            newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+
+            if ("Work From Home - Friday".equalsIgnoreCase(newAttendance) || "Work From Home".equalsIgnoreCase(newAttendance)) {
+                newFoodAllowance = 0;
+            } else {
+                newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+            }
+
             attendance.setAllowance(attendance.getAllowance() + newAllowance);
             attendance.setFoodAllowance(attendance.getFoodAllowance() + newFoodAllowance);
         }
+
         attendance.setId(idAttendance);
         attendance.setEmailId(approvalList.getRaisedBy());
         attendance.setDate(approvalList.getDate());
-        attendance.setAttendance(approvalList.getNewAttendance());
+        attendance.setAttendance(newAttendance);
         attendance.setYear(approvalList.getYear());
         attendance.setQuarter(approvalList.getQuarter());
         attendance.setMonth(approvalList.getMonth());
-        attendance.setShift(approvalList.getNewShift());
+        attendance.setShift(newShift);
         attendance.setLastUpdatedBy(approvalList.getRaisedTo());
         attendance.setLastUpdatedOn(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMMM-yyyy HH:mm:ss")));
         attendanceRepository.save(attendance);
@@ -483,6 +490,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         String prevShift = approvalList.getPrevShift();
         String prevAttendance = approvalList.getPrevAttendance();
         String newShift = approvalList.getNewShift();
+        String newAttendance = approvalList.getNewAttendance();
 
         Map<String, Integer> shiftAllowanceMap = Map.of(
                 "Holiday", 0,
@@ -519,16 +527,21 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         }
 
         if (newShift != null && !newShift.isEmpty()) {
-            int newAllowance;
+            int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
             int newFoodAllowance;
-            newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
-            newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+
+            if ("Work From Home - Friday".equalsIgnoreCase(newAttendance) || "Work From Home".equalsIgnoreCase(newAttendance)) {
+                newFoodAllowance = 0;
+            } else {
+                newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+            }
+
             monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() + newAllowance);
             monthlyAttendance.setFoodAllowance(monthlyAttendance.getFoodAllowance() + newFoodAllowance);
         }
 
-        adjustAttendanceCounts(monthlyAttendance, approvalList.getNewAttendance(), 1);
-        adjustAttendanceCounts(monthlyAttendance, approvalList.getPrevAttendance(), -1);
+        adjustAttendanceCounts(monthlyAttendance, newAttendance, 1);
+        adjustAttendanceCounts(monthlyAttendance, prevAttendance, -1);
         monthlyAttendanceRepository.save(monthlyAttendance);
     }
 
