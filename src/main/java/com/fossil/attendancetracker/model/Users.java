@@ -25,6 +25,7 @@ public class Users {
     private String managerId;
     private double leave;
     private Date lastLogin;
+    private boolean superAdmin;
 
     public Users() {
     }
@@ -147,5 +148,13 @@ public class Users {
 
     public void setLeave(double leave) {
         this.leave = leave;
+    }
+
+    public boolean isSuperAdmin() {
+        return superAdmin;
+    }
+
+    public void setSuperAdmin(boolean superAdmin) {
+        this.superAdmin = superAdmin;
     }
 }

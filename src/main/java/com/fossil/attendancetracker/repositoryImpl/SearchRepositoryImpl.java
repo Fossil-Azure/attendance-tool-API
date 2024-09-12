@@ -162,6 +162,7 @@ public class SearchRepositoryImpl implements SearchRepository {
                 authenticatedUser.setWorkLocation(found.getString("workLocation"));
                 authenticatedUser.setLeave(found.getDouble("leave"));
                 authenticatedUser.setLastLogin(new Date());
+                authenticatedUser.setSuperAdmin(found.getBoolean("superAdmin", false));
 
                 return ResponseEntity.ok(authenticatedUser);
             } else {
