@@ -410,12 +410,11 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
 
     private void updateAttendance(ApprovalList approvalList) {
         String idAttendance = approvalList.getRaisedBy() + approvalList.getDate();
-        String prevShift = approvalList.getPrevShift();
-        String prevAttendance = approvalList.getPrevAttendance();
         String newShift = approvalList.getNewShift();
         String newAttendance = approvalList.getNewAttendance();
         Attendance attendance = attendanceRepository.findById(idAttendance).orElse(new Attendance());
 
+        // Maps for shift allowances and food allowances
         Map<String, Integer> shiftAllowanceMap = Map.of(
                 "Holiday", 0,
                 "Absent", 0,
@@ -436,50 +435,40 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                 "Shift F", 0
         );
 
-        if (prevShift != null && !prevShift.isEmpty()) {
-            int prevAllowance;
-            int prevFoodAllowance;
-            if (prevAttendance.isEmpty()) {
-                prevAllowance = 0;
-                prevFoodAllowance = 0;
-            } else {
-                prevAllowance = shiftAllowanceMap.getOrDefault(prevShift, 0);
-                prevFoodAllowance = shiftFoodAllowanceMap.getOrDefault(prevShift, 0);
-            }
-            attendance.setAllowance(attendance.getAllowance() - prevAllowance);
-            attendance.setFoodAllowance(attendance.getFoodAllowance() - prevFoodAllowance);
+        // Replace with new values directly
+        int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
+        int newFoodAllowance;
+
+        if ("Work From Home - Friday".equalsIgnoreCase(newAttendance) || "Work From Home".equalsIgnoreCase(newAttendance)) {
+            newFoodAllowance = 0;
+        } else {
+            newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
         }
 
-        if (newShift != null && !newShift.isEmpty()) {
-            int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
-            int newFoodAllowance;
+        // Set the new values directly
+        attendance.setAllowance(newAllowance);
+        attendance.setFoodAllowance(newFoodAllowance);
+        attendance.setShift(newShift);
+        attendance.setAttendance(newAttendance);
 
-            if ("Work From Home - Friday".equalsIgnoreCase(newAttendance) || "Work From Home".equalsIgnoreCase(newAttendance)) {
-                newFoodAllowance = 0;
-            } else {
-                newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
-            }
-
-            attendance.setAllowance(attendance.getAllowance() + newAllowance);
-            attendance.setFoodAllowance(attendance.getFoodAllowance() + newFoodAllowance);
-        }
-
+        // Update other necessary fields
         attendance.setId(idAttendance);
         attendance.setEmailId(approvalList.getRaisedBy());
         attendance.setDate(approvalList.getDate());
-        attendance.setAttendance(newAttendance);
         attendance.setYear(approvalList.getYear());
         attendance.setQuarter(approvalList.getQuarter());
         attendance.setMonth(approvalList.getMonth());
-        attendance.setShift(newShift);
         attendance.setLastUpdatedBy(approvalList.getRaisedTo());
         attendance.setLastUpdatedOn(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMMM-yyyy HH:mm:ss")));
+
         attendanceRepository.save(attendance);
     }
 
     private void updateMonthlyAttendance(ApprovalList approvalList) {
         String idMthAtt = approvalList.getRaisedBy() + approvalList.getQuarter() + approvalList.getYear() + "_" + approvalList.getMonth();
         MonthlyAttendance monthlyAttendance = monthlyAttendanceRepository.findById(idMthAtt).orElse(new MonthlyAttendance());
+
+        // Set basic fields
         monthlyAttendance.setId(idMthAtt);
         monthlyAttendance.setName(approvalList.getName());
         monthlyAttendance.setEmailId(approvalList.getRaisedBy());
@@ -492,6 +481,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         String newShift = approvalList.getNewShift();
         String newAttendance = approvalList.getNewAttendance();
 
+        // Shift allowance map
         Map<String, Integer> shiftAllowanceMap = Map.of(
                 "Holiday", 0,
                 "Absent", 0,
@@ -502,46 +492,28 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                 "Shift F", 250
         );
 
-        Map<String, Integer> shiftFoodAllowanceMap = Map.of(
-                "Holiday", 0,
-                "Absent", 0,
-                "Shift A", 0,
-                "Shift B", 100,
-                "Shift C", 100,
-                "Shift D", 100,
-                "Shift F", 0
-        );
-
+        // Subtract previous allowances (if applicable)
         if (prevShift != null && !prevShift.isEmpty()) {
-            int prevAllowance;
-            int prevFoodAllowance;
-            if (prevAttendance.isEmpty()) {
-                prevAllowance = 0;
-                prevFoodAllowance = 0;
-            } else {
-                prevAllowance = shiftAllowanceMap.getOrDefault(prevShift, 0);
-                prevFoodAllowance = shiftFoodAllowanceMap.getOrDefault(prevShift, 0);
+            int prevAllowance = shiftAllowanceMap.getOrDefault(prevShift, 0);
+            if (!prevAttendance.isEmpty()) {
+                monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() - prevAllowance);
             }
-            monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() - prevAllowance);
-            monthlyAttendance.setFoodAllowance(monthlyAttendance.getFoodAllowance() - prevFoodAllowance);
         }
 
+        // Add new allowances (if applicable)
         if (newShift != null && !newShift.isEmpty()) {
             int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
-            int newFoodAllowance;
-
-            if ("Work From Home - Friday".equalsIgnoreCase(newAttendance) || "Work From Home".equalsIgnoreCase(newAttendance)) {
-                newFoodAllowance = 0;
-            } else {
-                newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
-            }
+            int newFoodAllowance = ("Work From Home".equalsIgnoreCase(newAttendance) || "Work From Home - Friday".equalsIgnoreCase(newAttendance)) ? 0 : 100;
 
             monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() + newAllowance);
-            monthlyAttendance.setFoodAllowance(monthlyAttendance.getFoodAllowance() + newFoodAllowance);
+            monthlyAttendance.setFoodAllowance(newFoodAllowance);
         }
 
-        adjustAttendanceCounts(monthlyAttendance, newAttendance, 1);
-        adjustAttendanceCounts(monthlyAttendance, prevAttendance, -1);
+        // Adjust attendance counts: increment for new, decrement for old
+        adjustAttendanceCounts(monthlyAttendance, prevAttendance, -1); // Subtract previous
+        adjustAttendanceCounts(monthlyAttendance, newAttendance, 1);   // Add new
+
+        // Save updated monthly attendance
         monthlyAttendanceRepository.save(monthlyAttendance);
     }
 
