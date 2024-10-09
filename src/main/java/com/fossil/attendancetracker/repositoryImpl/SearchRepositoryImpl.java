@@ -176,6 +176,8 @@ public class SearchRepositoryImpl implements SearchRepository {
     @Override
     public List<Users> getSubordinates(Users manager) {
         List<Users> allSubordinates = new ArrayList<>();
+        Users selfData = usersRepo.findByEmailId(manager.getEmailId());
+        allSubordinates.add(selfData);
 
         List<Users> directSubordinates = usersRepo.findByManagerId(manager.getEmailId());
         Queue<Users> queue = new LinkedList<>(directSubordinates);

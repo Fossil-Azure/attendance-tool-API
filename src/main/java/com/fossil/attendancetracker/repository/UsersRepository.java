@@ -9,4 +9,6 @@ public interface UsersRepository extends MongoRepository<Users, String> {
 
     List<Users> findByManagerId(String managerId);
 
+    Users findByEmailId(String emailId);
+
 }

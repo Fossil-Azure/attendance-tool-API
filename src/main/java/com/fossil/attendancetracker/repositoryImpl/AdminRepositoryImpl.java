@@ -118,10 +118,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         MongoDatabase database = client.getDatabase("digital-GBS");
         MongoCollection<Document> collection = database.getCollection("qtrAttendance");
 
-        Bson filter = Filters.and(
-                eq("year", year),
-                eq("quarter", quarter)
-        );
+        Bson filter = Filters.and(eq("year", year), eq("quarter", quarter));
 
         List<QtrAttendance> attendanceList = new ArrayList<>();
         try (MongoCursor<Document> cursor = collection.find(filter).iterator()) {
@@ -149,10 +146,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         MongoDatabase database = client.getDatabase("digital-GBS");
         MongoCollection<Document> collection = database.getCollection("monthlyAttendance");
 
-        Bson filter = Filters.and(
-                eq("year", year),
-                eq("month", month)
-        );
+        Bson filter = Filters.and(eq("year", year), eq("month", month));
 
         List<MonthlyAttendance> attendanceList = new ArrayList<>();
         try (MongoCursor<Document> cursor = collection.find(filter).iterator()) {
@@ -218,9 +212,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                     int newWfhCount = found.getInteger("wfhFriday", 0) + 1;
                     int newFoodAllowance = found.getInteger("foodAllowance") + foodAllowance;
                     int newAllowance = found.getInteger("allowance") + allowance;
-                    Document update = new Document("$set", new Document("wfhFriday", newWfhCount)
-                            .append("foodAllowance", newFoodAllowance)
-                            .append("allowance", newAllowance));
+                    Document update = new Document("$set", new Document("wfhFriday", newWfhCount).append("foodAllowance", newFoodAllowance).append("allowance", newAllowance));
                     collection2.updateOne(query, update);
                     found.put("wfhFriday", newWfhCount);
                     found.put("foodAllowance", newFoodAllowance);
@@ -230,9 +222,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                     int newWfoCount = found.getInteger("wfoFriday", 0) + 1;
                     int newFoodAllowance = found.getInteger("foodAllowance") + foodAllowance;
                     int newAllowance = found.getInteger("allowance") + allowance;
-                    Document update = new Document("$set", new Document("wfoFriday", newWfoCount)
-                            .append("foodAllowance", newFoodAllowance)
-                            .append("allowance", newAllowance));
+                    Document update = new Document("$set", new Document("wfoFriday", newWfoCount).append("foodAllowance", newFoodAllowance).append("allowance", newAllowance));
                     collection2.updateOne(query, update);
                     found.put("wfoFriday", newWfoCount);
                     found.put("foodAllowance", newFoodAllowance);
@@ -256,9 +246,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                     int newWfoCount = found.getInteger("wfo", 0) + 1;
                     int newFoodAllowance = found.getInteger("foodAllowance") + foodAllowance;
                     int newAllowance = found.getInteger("allowance") + allowance;
-                    Document update = new Document("$set", new Document("wfo", newWfoCount)
-                            .append("foodAllowance", newFoodAllowance)
-                            .append("allowance", newAllowance));
+                    Document update = new Document("$set", new Document("wfo", newWfoCount).append("foodAllowance", newFoodAllowance).append("allowance", newAllowance));
                     collection2.updateOne(query, update);
                     found.put("wfo", newWfoCount);
                     found.put("foodAllowance", newFoodAllowance);
@@ -268,9 +256,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                     int newWfhCount = found.getInteger("wfh", 0) + 1;
                     int newFoodAllowance = found.getInteger("foodAllowance") + foodAllowance;
                     int newAllowance = found.getInteger("allowance") + allowance;
-                    Document update = new Document("$set", new Document("wfh", newWfhCount)
-                            .append("foodAllowance", newFoodAllowance)
-                            .append("allowance", newAllowance));
+                    Document update = new Document("$set", new Document("wfh", newWfhCount).append("foodAllowance", newFoodAllowance).append("allowance", newAllowance));
                     collection2.updateOne(query, update);
                     found.put("wfh", newWfhCount);
                     found.put("foodAllowance", newFoodAllowance);
@@ -340,9 +326,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         MongoDatabase database = client.getDatabase("digital-GBS");
         MongoCollection<Document> collection = database.getCollection("approvalList");
 
-        Document query = new Document("date", approvalList.getDate())
-                .append("status", new Document("$in", Arrays.asList("Pending", "Extra WFH")))
-                .append("raisedBy", approvalList.getRaisedBy());
+        Document query = new Document("date", approvalList.getDate()).append("status", new Document("$in", Arrays.asList("Pending", "Extra WFH"))).append("raisedBy", approvalList.getRaisedBy());
         Document existingDocument = collection.find(query).first();
 
         if (existingDocument != null) {
@@ -353,21 +337,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
             approvalList.setId(UUID.randomUUID().toString());
         }
 
-        Document document = new Document("newShift", approvalList.getNewShift())
-                .append("date", approvalList.getDate())
-                .append("name", approvalList.getName())
-                .append("year", approvalList.getYear())
-                .append("quarter", approvalList.getQuarter())
-                .append("month", approvalList.getMonth())
-                .append("raisedBy", approvalList.getRaisedBy())
-                .append("raisedTo", approvalList.getRaisedTo())
-                .append("comments", approvalList.getComments())
-                .append("status", approvalList.getStatus())
-                .append("type", approvalList.getType())
-                .append("prevAttendance", approvalList.getPrevAttendance())
-                .append("prevShift", approvalList.getPrevShift())
-                .append("newAttendance", approvalList.getNewAttendance())
-                .append("_id", approvalList.getId());
+        Document document = new Document("newShift", approvalList.getNewShift()).append("date", approvalList.getDate()).append("name", approvalList.getName()).append("year", approvalList.getYear()).append("quarter", approvalList.getQuarter()).append("month", approvalList.getMonth()).append("raisedBy", approvalList.getRaisedBy()).append("raisedTo", approvalList.getRaisedTo()).append("comments", approvalList.getComments()).append("status", approvalList.getStatus()).append("type", approvalList.getType()).append("prevAttendance", approvalList.getPrevAttendance()).append("prevShift", approvalList.getPrevShift()).append("newAttendance", approvalList.getNewAttendance()).append("_id", approvalList.getId());
 
         collection.insertOne(document);
 
@@ -415,25 +385,9 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         Attendance attendance = attendanceRepository.findById(idAttendance).orElse(new Attendance());
 
         // Maps for shift allowances and food allowances
-        Map<String, Integer> shiftAllowanceMap = Map.of(
-                "Holiday", 0,
-                "Absent", 0,
-                "Shift A", 0,
-                "Shift B", 150,
-                "Shift C", 250,
-                "Shift D", 350,
-                "Shift F", 250
-        );
+        Map<String, Integer> shiftAllowanceMap = Map.of("Holiday", 0, "Absent", 0, "Shift A", 0, "Shift B", 150, "Shift C", 250, "Shift D", 350, "Shift F", 250);
 
-        Map<String, Integer> shiftFoodAllowanceMap = Map.of(
-                "Holiday", 0,
-                "Absent", 0,
-                "Shift A", 0,
-                "Shift B", 100,
-                "Shift C", 100,
-                "Shift D", 100,
-                "Shift F", 0
-        );
+        Map<String, Integer> shiftFoodAllowanceMap = Map.of("Holiday", 0, "Absent", 0, "Shift A", 75, "Shift B", 100, "Shift C", 100, "Shift D", 100, "Shift F", 0);
 
         // Replace with new values directly
         int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
@@ -482,31 +436,33 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         String newAttendance = approvalList.getNewAttendance();
 
         // Shift allowance map
-        Map<String, Integer> shiftAllowanceMap = Map.of(
-                "Holiday", 0,
-                "Absent", 0,
-                "Shift A", 0,
-                "Shift B", 150,
-                "Shift C", 250,
-                "Shift D", 350,
-                "Shift F", 250
-        );
+        Map<String, Integer> shiftAllowanceMap = Map.of("Holiday", 0, "Absent", 0, "Shift A", 0, "Shift B", 150, "Shift C", 250, "Shift D", 350, "Shift F", 250);
+
+        Map<String, Integer> shiftFoodAllowanceMap = Map.of("Holiday", 0, "Absent", 0, "Shift A", 75, "Shift B", 100, "Shift C", 100, "Shift D", 100, "Shift F", 0);
 
         // Subtract previous allowances (if applicable)
-        if (prevShift != null && !prevShift.isEmpty()) {
+        if (prevShift != null && !prevShift.isEmpty() && prevAttendance != null && !prevAttendance.isEmpty()) {
             int prevAllowance = shiftAllowanceMap.getOrDefault(prevShift, 0);
-            if (!prevAttendance.isEmpty()) {
-                monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() - prevAllowance);
-            }
+            int prevFoodAllowance = shiftFoodAllowanceMap.getOrDefault(prevShift, 0);
+
+            // Subtract only if previous shift and attendance were valid
+            monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() - prevAllowance);
+            monthlyAttendance.setFoodAllowance(monthlyAttendance.getFoodAllowance() - prevFoodAllowance);
         }
 
         // Add new allowances (if applicable)
         if (newShift != null && !newShift.isEmpty()) {
             int newAllowance = shiftAllowanceMap.getOrDefault(newShift, 0);
-            int newFoodAllowance = ("Work From Home".equalsIgnoreCase(newAttendance) || "Work From Home - Friday".equalsIgnoreCase(newAttendance)) ? 0 : 100;
+            int newFoodAllowance;
+
+            if ("Work From Home".equalsIgnoreCase(newAttendance) || "Work From Home - Friday".equalsIgnoreCase(newAttendance)) {
+                newFoodAllowance = 0;  // No food allowance for WFH
+            } else {
+                newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+            }
 
             monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() + newAllowance);
-            monthlyAttendance.setFoodAllowance(newFoodAllowance);
+            monthlyAttendance.setFoodAllowance(monthlyAttendance.getFoodAllowance() + newFoodAllowance);
         }
 
         // Adjust attendance counts: increment for new, decrement for old
