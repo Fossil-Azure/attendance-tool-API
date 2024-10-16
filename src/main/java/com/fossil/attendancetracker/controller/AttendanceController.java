@@ -92,4 +92,9 @@ public class AttendanceController {
     public List<Attendance> getUpcomingLeaves() {
         return dateWiseRepository.getUpcomingLeaves();
     }
+
+    @PostMapping(value = "/calendarView")
+    public List<Attendance> findByEmailIdAndYearAndMonth(@RequestBody Attendance attendance) {
+        return attendanceRepo.findByEmailIdAndYearAndMonth(attendance.getEmailId(), attendance.getYear(), attendance.getMonth());
+    }
 }

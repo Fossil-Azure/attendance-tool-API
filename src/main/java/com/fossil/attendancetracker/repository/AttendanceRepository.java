@@ -14,4 +14,6 @@ public interface AttendanceRepository extends MongoRepository<Attendance, String
     List<Attendance> findByEmailIdAndQuarterAndYear(String emailId, String quarter, String year);
 
     List<Attendance> findByEmailIdInAndDate(List<String> emailIds, String date);
+
+    List<Attendance> findByEmailIdAndYearAndMonth(String emailId, String year, String month);
 }
