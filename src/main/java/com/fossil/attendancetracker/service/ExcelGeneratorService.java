@@ -17,7 +17,11 @@ import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ExcelGeneratorService {
@@ -195,7 +199,7 @@ public class ExcelGeneratorService {
             case "Shift A" -> new XSSFColor(new byte[]{(byte) 144, (byte) 238, (byte) 144}, null);
             case "Shift B" -> new XSSFColor(new byte[]{(byte) 250, (byte) 215, (byte) 160}, null);
             case "Shift C" -> new XSSFColor(new byte[]{(byte) 117, (byte) 117, (byte) 235}, null);
-            case "Shift D" -> new XSSFColor(new byte[]{(byte) 240, (byte) 152, (byte) 115   }, null);
+            case "Shift D" -> new XSSFColor(new byte[]{(byte) 240, (byte) 152, (byte) 115}, null);
             case "Shift E" -> new XSSFColor(new byte[]{(byte) 0, (byte) 255, (byte) 0}, null);
             case "Shift F" -> new XSSFColor(new byte[]{(byte) 255, (byte) 0, (byte) 255}, null);
             case "Weekly Off" -> new XSSFColor(new byte[]{(byte) 122, (byte) 122, (byte) 122}, null);
@@ -305,4 +309,156 @@ public class ExcelGeneratorService {
         return columnLetter.toString();
     }
 
+    public ByteArrayInputStream generateEmptyExcel(List<Users> users, List<Attendance> attendances, int year, int month) {
+        // Check if required inputs are non-null
+        Objects.requireNonNull(users, "Users list cannot be null");
+        Objects.requireNonNull(attendances, "Attendances list cannot be null");
+
+        List<String> holidayStrings = Arrays.asList("02-October-2024", "31-October-2024", "01-November-2024", "25-December-2024");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMMM-yyyy");
+        List<LocalDate> holidays = holidayStrings.stream()
+                .map(date -> LocalDate.parse(date, formatter))
+                .toList();
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Attendance");
+
+            // Date and Day rows
+            Row dateRow = sheet.createRow(0);
+            Row dayRow = sheet.createRow(1);
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
+            DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEE");
+
+            // Static Column: "Emp Name" only
+            CellStyle headerCellStyle = createHeaderCellStyle(workbook, IndexedColors.YELLOW.getIndex());
+            Cell empNameCell = dayRow.createCell(0);
+            empNameCell.setCellValue("Emp Name");
+            empNameCell.setCellStyle(headerCellStyle);
+
+            // Date and Day Columns for the entire month
+            CellStyle dateDayCellStyle = createHeaderCellStyle(workbook, IndexedColors.SKY_BLUE.getIndex());
+            int dayIndex = 1; // Start after "Emp Name" column
+            for (int day = 1; day <= getDaysInMonth(year, month); day++) {
+                LocalDate date = LocalDate.of(year, month, day);
+                Cell dateCell = dateRow.createCell(dayIndex);
+                dateCell.setCellValue(date.format(dateFormatter));
+                dateCell.setCellStyle(dateDayCellStyle);
+
+                Cell dayCell = dayRow.createCell(dayIndex);
+                dayCell.setCellValue(date.format(dayFormatter));
+                dayCell.setCellStyle(dateDayCellStyle);
+
+                dayIndex++;
+            }
+
+            // Fill data rows for each user
+            int rowIdx = 2;
+            for (Users user : users) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(user.getName()); // Emp Name
+
+                // Populate attendance for each day in the month
+                List<Attendance> userAttendances = filterAttendancesByUser(attendances, user.getEmailId());
+                if (userAttendances == null) {
+                    userAttendances = new ArrayList<>(); // Ensure non-null list
+                }
+                int dayColIndex = 1;
+                for (int day = 1; day <= getDaysInMonth(year, month); day++) {
+                    LocalDate currentDate = LocalDate.of(year, month, day);
+                    String attendanceStatus = getAttendanceForDay(userAttendances, year, month, day);
+
+                    // Check for holidays and weekends
+                    if (attendanceStatus == null || "Not marked".equals(attendanceStatus)) {
+                        if (holidays.contains(currentDate)) {
+                            attendanceStatus = "Public Holiday"; // Set to Public Holiday if date is in holidays list
+                        } else if (currentDate.getDayOfWeek() == DayOfWeek.SATURDAY || currentDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                            attendanceStatus = "Weekly Off";
+                        } else {
+                            attendanceStatus = "Not marked"; // Default if neither holiday nor weekend
+                        }
+                    }
+
+                    Cell cell = row.createCell(dayColIndex++);
+                    cell.setCellValue(attendanceStatus);
+
+                    // Apply specific styles for "Weekly Off" and "Public Holiday"
+                    switch (attendanceStatus) {
+                        case "Weekly Off" -> {
+                            XSSFColor customColor = new XSSFColor(new byte[]{(byte) 156, (byte) 156, (byte) 156}, null); // A grey
+
+                            CellStyle customGreyCellStyle = createHeaderCellStyle(workbook, customColor);
+                            cell.setCellStyle(customGreyCellStyle);
+                        }
+                        case "Public Holiday" -> {
+                            XSSFColor holidayColor = new XSSFColor(new byte[]{(byte) 255, (byte) 204, (byte) 153}, null); // Light orange color
+
+                            CellStyle holidayCellStyle = createHeaderCellStyle(workbook, holidayColor);
+                            cell.setCellStyle(holidayCellStyle);
+                        }
+                        case "WFO" -> {
+                            XSSFColor wfoColor = new XSSFColor(new byte[]{(byte) 144, (byte) 238, (byte) 144}, null); // Light Green color
+
+                            CellStyle holidayCellStyle = createHeaderCellStyle(workbook, wfoColor);
+                            cell.setCellStyle(holidayCellStyle);
+                        }
+                        case "WFH" -> {
+                            XSSFColor wfhColor = new XSSFColor(new byte[]{(byte) 165, (byte) 165, (byte) 242}, null); // Light Purple color
+
+                            CellStyle holidayCellStyle = createHeaderCellStyle(workbook, wfhColor);
+                            cell.setCellStyle(holidayCellStyle);
+                        }
+                        case "Leave" -> {
+                            XSSFColor leaveColor = new XSSFColor(new byte[]{(byte) 237, (byte) 88, (byte) 85}, null); // Light Purple color
+
+                            CellStyle holidayCellStyle = createHeaderCellStyle(workbook, leaveColor);
+                            cell.setCellStyle(holidayCellStyle);
+                        }
+                    }
+                }
+
+            }
+
+            applyBorderToSheet(sheet, 2, dayIndex);
+
+            for (int i = 0; i < dayIndex; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Excel file", e);
+        }
+    }
+
+    private String getAttendanceForDay(List<Attendance> attendances, int year, int month, int day) {
+        LocalDate targetDate = LocalDate.of(year, month, day);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMMM-yyyy"); // Ensure this matches the format of att.getDate()
+
+        return attendances.stream()
+                .filter(att -> {
+                    if (att.getDate() == null) {
+                        return false;
+                    }
+                    // Parse att.getDate() from String to LocalDate
+                    try {
+                        LocalDate attendanceDate = LocalDate.parse(att.getDate(), formatter);
+                        return attendanceDate.equals(targetDate);
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Date parsing error for attendance record: " + att.getDate());
+                        return false;
+                    }
+                })
+                .map(att -> {
+                    // Check if attendance is Work From Home or Work From Home - Friday and return WFH if so
+                    if ("Work From Home".equalsIgnoreCase(att.getAttendance()) || "Work From Home - Friday".equalsIgnoreCase(att.getAttendance())) {
+                        return "WFH";
+                    } else if ("Work From Office".equalsIgnoreCase(att.getAttendance()) || "Work From Office - Friday".equalsIgnoreCase(att.getAttendance())) {
+                        return "WFO";
+                    }
+                    return att.getAttendance(); // Otherwise, return the original attendance
+                })
+                .findFirst()
+                .orElse("Not marked");
+    }
 }

@@ -60,4 +60,21 @@ public class ExcelSheetController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(in));
     }
+
+    @GetMapping("/download/attendanceExcel")
+    public ResponseEntity<InputStreamResource> downloadAttendanceExcel(@RequestParam int year, @RequestParam int month, @RequestParam Users user) {
+        List<Users> users = searchRepository.getSubordinates(user);
+        List<Attendance> attendances = attendanceRepository.findAll();
+
+        ByteArrayInputStream in = excelGeneratorService.generateEmptyExcel(users, attendances, year, month);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=attendance.xlsx");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
+    }
 }
