@@ -337,7 +337,10 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
             approvalList.setId(UUID.randomUUID().toString());
         }
 
-        Document document = new Document("newShift", approvalList.getNewShift()).append("date", approvalList.getDate()).append("name", approvalList.getName()).append("year", approvalList.getYear()).append("quarter", approvalList.getQuarter()).append("month", approvalList.getMonth()).append("raisedBy", approvalList.getRaisedBy()).append("raisedTo", approvalList.getRaisedTo()).append("comments", approvalList.getComments()).append("status", approvalList.getStatus()).append("type", approvalList.getType()).append("prevAttendance", approvalList.getPrevAttendance()).append("prevShift", approvalList.getPrevShift()).append("newAttendance", approvalList.getNewAttendance()).append("_id", approvalList.getId());
+        Document document = new Document("newShift", approvalList.getNewShift()).append("date", approvalList.getDate()).append("name", approvalList.getName()).append("year", approvalList.getYear()).append("quarter",
+                approvalList.getQuarter()).append("month", approvalList.getMonth()).append("raisedBy", approvalList.getRaisedBy()).append("raisedTo", approvalList.getRaisedTo()).append("comments",
+                approvalList.getComments()).append("status", approvalList.getStatus()).append("type", approvalList.getType()).append("prevAttendance", approvalList.getPrevAttendance()).append("prevShift",
+                approvalList.getPrevShift()).append("newAttendance", approvalList.getNewAttendance()).append("_id", approvalList.getId()).append("permanent", approvalList.isPermanent());
 
         collection.insertOne(document);
 
@@ -382,6 +385,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
         String idAttendance = approvalList.getRaisedBy() + approvalList.getDate();
         String newShift = approvalList.getNewShift();
         String newAttendance = approvalList.getNewAttendance();
+        boolean isPermanent = approvalList.isPermanent();
         Attendance attendance = attendanceRepository.findById(idAttendance).orElse(new Attendance());
 
         // Maps for shift allowances and food allowances
@@ -397,6 +401,11 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
             newFoodAllowance = 0;
         } else {
             newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+        }
+
+        if(!isPermanent) {
+            newAllowance = 0;
+            newFoodAllowance = 0;
         }
 
         // Set the new values directly
@@ -420,6 +429,7 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
 
     private void updateMonthlyAttendance(ApprovalList approvalList) {
         String idMthAtt = approvalList.getRaisedBy() + approvalList.getQuarter() + approvalList.getYear() + "_" + approvalList.getMonth();
+        boolean isPermanent = approvalList.isPermanent();
         MonthlyAttendance monthlyAttendance = monthlyAttendanceRepository.findById(idMthAtt).orElse(new MonthlyAttendance());
 
         // Set basic fields
@@ -445,6 +455,11 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
             int prevAllowance = shiftAllowanceMap.getOrDefault(prevShift, 0);
             int prevFoodAllowance = shiftFoodAllowanceMap.getOrDefault(prevShift, 0);
 
+            if(!isPermanent) {
+                prevAllowance = 0;
+                prevFoodAllowance = 0;
+            }
+
             // Subtract only if previous shift and attendance were valid
             monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() - prevAllowance);
             monthlyAttendance.setFoodAllowance(monthlyAttendance.getFoodAllowance() - prevFoodAllowance);
@@ -459,6 +474,11 @@ public class AdminRepositoryImpl implements AdminMethodsRepository {
                 newFoodAllowance = 0;  // No food allowance for WFH
             } else {
                 newFoodAllowance = shiftFoodAllowanceMap.getOrDefault(newShift, 0);
+            }
+
+            if(!isPermanent) {
+                newAllowance = 0;
+                newFoodAllowance = 0;
             }
 
             monthlyAttendance.setAllowance(monthlyAttendance.getAllowance() + newAllowance);

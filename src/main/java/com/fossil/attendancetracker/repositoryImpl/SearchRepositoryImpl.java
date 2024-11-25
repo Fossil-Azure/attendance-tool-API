@@ -54,6 +54,7 @@ public class SearchRepositoryImpl implements SearchRepository {
         authenticatedUser.setAdmin(user.isAdmin());
         authenticatedUser.setLeave(user.getLeave());
         authenticatedUser.setLastLogin(new Date());
+        authenticatedUser.setPermanent(user.isPermanent());
         return authenticatedUser;
     }
 
@@ -163,6 +164,7 @@ public class SearchRepositoryImpl implements SearchRepository {
                 authenticatedUser.setLeave(found.getDouble("leave"));
                 authenticatedUser.setLastLogin(new Date());
                 authenticatedUser.setSuperAdmin(found.getBoolean("superAdmin", false));
+                authenticatedUser.setPermanent(found.getBoolean("permanent", true));
 
                 return ResponseEntity.ok(authenticatedUser);
             } else {

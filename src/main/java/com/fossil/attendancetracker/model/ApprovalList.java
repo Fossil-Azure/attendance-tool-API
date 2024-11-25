@@ -25,6 +25,7 @@ public class ApprovalList {
     private String quarter;
     private String month;
     private String name;
+    private boolean permanent;
 
     public String getNewAttendance() {
         return newAttendance;
@@ -160,5 +161,13 @@ public class ApprovalList {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isPermanent() {
+        return permanent;
+    }
+
+    public void setPermanent(boolean permanent) {
+        this.permanent = permanent;
     }
 }

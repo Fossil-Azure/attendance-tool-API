@@ -26,6 +26,7 @@ public class Users {
     private double leave;
     private Date lastLogin;
     private boolean superAdmin;
+    private boolean permanent;
 
     public Users() {
     }
@@ -156,5 +157,13 @@ public class Users {
 
     public void setSuperAdmin(boolean superAdmin) {
         this.superAdmin = superAdmin;
+    }
+
+    public boolean isPermanent() {
+        return permanent;
+    }
+
+    public void setPermanent(boolean permanent) {
+        this.permanent = permanent;
     }
 }
